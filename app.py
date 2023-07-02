@@ -10,13 +10,17 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, \
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import Required, Length, EqualTo
+from wtforms.validators import DataRequired, Length, EqualTo
 import onetimepass
 import pyqrcode
 
 # create application instance
 app = Flask(__name__)
-app.config.from_object('config')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SECRET_KEY'] = "random string"
+
+# db = SQLAlchemy(app)
+# app.config.from_object('config')
 
 # initialize extensions
 bootstrap = Bootstrap(app)
@@ -65,18 +69,18 @@ def load_user(user_id):
 
 class RegisterForm(FlaskForm):
     """Registration form."""
-    username = StringField('Username', validators=[Required(), Length(1, 64)])
-    password = PasswordField('Password', validators=[Required()])
+    username = StringField('Username', validators=[DataRequired(), Length(1, 64)])
+    password = PasswordField('Password', validators=[DataRequired()])
     password_again = PasswordField('Password again',
-                                   validators=[Required(), EqualTo('password')])
+                                   validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
 
 class LoginForm(FlaskForm):
     """Login form."""
-    username = StringField('Username', validators=[Required(), Length(1, 64)])
-    password = PasswordField('Password', validators=[Required()])
-    token = StringField('Token', validators=[Required(), Length(6, 6)])
+    username = StringField('Username', validators=[DataRequired(), Length(1, 64)])
+    password = PasswordField('Password', validators=[DataRequired()])
+    token = StringField('Token', validators=[DataRequired(), Length(6, 6)])
     submit = SubmitField('Login')
 
 
@@ -174,8 +178,12 @@ def logout():
 
 
 # create database tables if they don't exist yet
-db.create_all()
+with app.app_context():
+    db.create_all()
+
 
 
 if __name__ == '__main__':
+    # db.create_all()
+    
     app.run(host='0.0.0.0', debug=True)
